@@ -1,8 +1,8 @@
+from bs4 import BeautifulSoup
+import json
+from pathlib import Path
 import random
 import requests
-from bs4 import BeautifulSoup
-from pathlib import Path
-import json
 
 def updateFirefox():
     url = 'https://en.wikipedia.org/wiki/Firefox'
@@ -76,6 +76,7 @@ def getAgent()->str:
     else:
         platform = random.choice(platforms)
         if browser == 'Firefox':
+            platform = platform[:platform.rfind(')')] + f'; rv:{browsers[browser]})'
             useragent = f'Mozilla/5.0 {platform} Gecko/20100101 Firefox/{browsers[browser]}'
         else:
             useragent = f'Mozilla/5.0 {platform} AppleWebKit/537.36 (KHTML, like Gecko) Chrome/{browsers["Chrome"]} Safari/537.36'

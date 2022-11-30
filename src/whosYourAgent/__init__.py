@@ -5,7 +5,8 @@ import time
 
 browsersPath = Path(__file__).parent/'browserVersions.json'
 try:
-    if time.time() - os.stat(str(browsersPath)).st_mtime > 604800: #1week
+    if not browsersPath.exists()\
+    or time.time() - os.stat(str(browsersPath)).st_mtime > 1440: #1day
         updateAll()
 except Exception as e:
     print(f'Error updating browser versions for whosYourAgent:')
