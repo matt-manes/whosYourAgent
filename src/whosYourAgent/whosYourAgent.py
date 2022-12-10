@@ -3,63 +3,68 @@ import json
 from pathlib import Path
 import random
 import requests
+from concurrent.futures import ThreadPoolExecutor
 
-def updateFirefox():
-    url = 'https://en.wikipedia.org/wiki/Firefox'
-    soup = BeautifulSoup(requests.get(url).text, 'html.parser')
-    version = soup.find('table', class_='infobox-subbox').find('td', class_='infobox-data').text
-    version = version[:version.find('[')]
-    return version
+class VersionUpdater:
+    def __init__(self):
+        self.versionsPath = (Path(__file__).parent/'browserVersions.json')
+        self.versionsPath.touch()
 
-def updateChrome():
-    url = 'https://en.wikipedia.org/wiki/Google_Chrome'
-    soup = BeautifulSoup(requests.get(url).text, 'html.parser')
-    infoBoxes = soup.find_all('td', class_='infobox-data')
-    version = infoBoxes[7].text[:infoBoxes[7].text.find('/')]
-    return version
+    def updateFirefox(self):
+        url = 'https://en.wikipedia.org/wiki/Firefox'
+        soup = BeautifulSoup(requests.get(url).text, 'html.parser')
+        version = soup.find('table', class_='infobox-subbox').find('td', class_='infobox-data').text
+        version = version[:version.find('[')]
+        self.firefox = version
 
-def updateSafari():
-    url = 'https://en.wikipedia.org/wiki/Safari_(web_browser)'
-    soup = BeautifulSoup(requests.get(url).text, 'html.parser')
-    infoBoxes = soup.find_all('td', class_='infobox-data')
-    version = infoBoxes[2].text[:infoBoxes[2].text.find('[')]
-    return version
+    def updateChrome(self):
+        url = 'https://en.wikipedia.org/wiki/Google_Chrome'
+        soup = BeautifulSoup(requests.get(url).text, 'html.parser')
+        infoBoxes = soup.find_all('td', class_='infobox-data')
+        version = infoBoxes[7].text[:infoBoxes[7].text.find('/')]
+        self.chrome = version
 
-def updateEdge():
-    url = 'https://en.wikipedia.org/wiki/Microsoft_Edge'
-    soup = BeautifulSoup(requests.get(url).text, 'html.parser')
-    infoBoxes = soup.find_all('td', class_='infobox-data')
-    version = infoBoxes[3].text[:infoBoxes[3].text.find('[')]
-    return version
+    def updateSafari(self):
+        url = 'https://en.wikipedia.org/wiki/Safari_(web_browser)'
+        soup = BeautifulSoup(requests.get(url).text, 'html.parser')
+        infoBoxes = soup.find_all('td', class_='infobox-data')
+        version = infoBoxes[2].text[:infoBoxes[2].text.find('[')]
+        self.safari = version
 
-def updateVivaldi():
-    url = 'https://en.wikipedia.org/wiki/Vivaldi_(web_browser)'
-    soup = BeautifulSoup(requests.get(url).text, 'html.parser')
-    infoBoxes = soup.find_all('td', class_='infobox-data')
-    version = infoBoxes[5].text[:infoBoxes[5].text.find(' ')]
-    return version
+    def updateEdge(self):
+        url = 'https://en.wikipedia.org/wiki/Microsoft_Edge'
+        soup = BeautifulSoup(requests.get(url).text, 'html.parser')
+        infoBoxes = soup.find_all('td', class_='infobox-data')
+        version = infoBoxes[3].text[:infoBoxes[3].text.find('[')]
+        self.edge = version
 
-def updateOpera():
-    url = 'https://en.wikipedia.org/wiki/Opera_(web_browser)'
-    soup = BeautifulSoup(requests.get(url).text, 'html.parser')
-    infoBoxes = soup.find_all('td', class_='infobox-data')
-    version = infoBoxes[2].text[:infoBoxes[2].text.find(' ')]
-    return version
+    def updateVivaldi(self):
+        url = 'https://en.wikipedia.org/wiki/Vivaldi_(web_browser)'
+        soup = BeautifulSoup(requests.get(url).text, 'html.parser')
+        infoBoxes = soup.find_all('td', class_='infobox-data')
+        version = infoBoxes[5].text[:infoBoxes[5].text.find(' ')]
+        self.vivaldi = version
 
-def updateAll():
-    firefoxVersion = updateFirefox()
-    chromeVersion = updateChrome()
-    safariVersion = updateSafari()
-    edgeVersion = updateEdge()
-    vivaldiVersion = updateVivaldi()
-    operaVersion = updateOpera()
-    versions = {'Firefox': firefoxVersion,
-                'Chrome': chromeVersion,
-                'Edg': edgeVersion,
-                'Vivaldi': vivaldiVersion,
-                'OPR': operaVersion,
-                'Safari': safariVersion}
-    (Path(__file__).parent/'browserVersions.json').write_text(json.dumps(versions))
+    def updateOpera(self):
+        url = 'https://en.wikipedia.org/wiki/Opera_(web_browser)'
+        soup = BeautifulSoup(requests.get(url).text, 'html.parser')
+        infoBoxes = soup.find_all('td', class_='infobox-data')
+        version = infoBoxes[2].p.text[:infoBoxes[2].p.text.find(' ')]
+        self.opera = version
+
+    def updateAll(self):
+        updaters = [self.updateFirefox, self.updateChrome, self.updateSafari,
+                    self.updateEdge, self.updateVivaldi, self.updateOpera]
+        with ThreadPoolExecutor(6) as executor:
+            for updater in updaters:
+                executor.submit(updater)
+        versions = {'Firefox': self.firefox,
+                    'Chrome': self.chrome,
+                    'Edg': self.edge,
+                    'Vivaldi': self.vivaldi,
+                    'OPR': self.opera,
+                    'Safari': self.safari}
+        self.versionsPath.write_text(json.dumps(versions))
 
 platforms = ['(Windows NT 10.0; Win64; x64)',
             '(x11; Ubuntu; Linux x86_64)',
