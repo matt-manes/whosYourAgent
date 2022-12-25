@@ -10,53 +10,75 @@ from bs4 import BeautifulSoup
 class VersionUpdater:
     def __init__(self):
         self.versionsPath = Path(__file__).parent / "browserVersions.json"
-        self.versionsPath.touch()
 
     def updateFirefox(self):
-        url = "https://en.wikipedia.org/wiki/Firefox"
-        soup = BeautifulSoup(requests.get(url).text, "html.parser")
-        version = (
-            soup.find("table", class_="infobox-subbox")
-            .find("td", class_="infobox-data")
-            .text
-        )
-        version = version[: version.find("[")]
-        self.firefox = version
+        try:
+            url = "https://en.wikipedia.org/wiki/Firefox"
+            soup = BeautifulSoup(requests.get(url).text, "html.parser")
+            version = (
+                soup.find("table", class_="infobox-subbox")
+                .find("td", class_="infobox-data")
+                .text
+            )
+            version = version[: version.find("[")]
+            self.firefox = version
+        except Exception as e:
+            print(e)
+            raise Exception("Error updating firefox")
 
     def updateChrome(self):
-        url = "https://en.wikipedia.org/wiki/Google_Chrome"
-        soup = BeautifulSoup(requests.get(url).text, "html.parser")
-        infoBoxes = soup.find_all("td", class_="infobox-data")
-        version = infoBoxes[7].text[: infoBoxes[7].text.find("/")]
-        self.chrome = version
+        try:
+            url = "https://en.wikipedia.org/wiki/Google_Chrome"
+            soup = BeautifulSoup(requests.get(url).text, "html.parser")
+            infoBoxes = soup.find_all("td", class_="infobox-data")
+            version = infoBoxes[7].text[: infoBoxes[7].text.find("/")]
+            self.chrome = version
+        except Exception as e:
+            print(e)
+            raise Exception("Error updating chrome")
 
     def updateSafari(self):
-        url = "https://en.wikipedia.org/wiki/Safari_(web_browser)"
-        soup = BeautifulSoup(requests.get(url).text, "html.parser")
-        infoBoxes = soup.find_all("td", class_="infobox-data")
-        version = infoBoxes[2].text[: infoBoxes[2].text.find("[")]
-        self.safari = version
+        try:
+            url = "https://en.wikipedia.org/wiki/Safari_(web_browser)"
+            soup = BeautifulSoup(requests.get(url).text, "html.parser")
+            infoBoxes = soup.find_all("td", class_="infobox-data")
+            version = infoBoxes[2].text[: infoBoxes[2].text.find("[")]
+            self.safari = version
+        except Exception as e:
+            print(e)
+            raise Exception("Error updating safari")
 
     def updateEdge(self):
-        url = "https://en.wikipedia.org/wiki/Microsoft_Edge"
-        soup = BeautifulSoup(requests.get(url).text, "html.parser")
-        infoBoxes = soup.find_all("td", class_="infobox-data")
-        version = infoBoxes[3].text[: infoBoxes[3].text.find("[")]
-        self.edge = version
+        try:
+            url = "https://www.techspot.com/downloads/7158-microsoft-edge.html"
+            soup = BeautifulSoup(requests.get(url).text, "html.parser")
+            version = soup.find("span", class_="subver").text
+            self.edge = version
+        except Exception as e:
+            print(e)
+            raise Exception("Error updating edge")
 
     def updateVivaldi(self):
-        url = "https://en.wikipedia.org/wiki/Vivaldi_(web_browser)"
-        soup = BeautifulSoup(requests.get(url).text, "html.parser")
-        infoBoxes = soup.find_all("td", class_="infobox-data")
-        version = infoBoxes[5].text[: infoBoxes[5].text.find(" ")]
-        self.vivaldi = version
+        try:
+            url = "https://en.wikipedia.org/wiki/Vivaldi_(web_browser)"
+            soup = BeautifulSoup(requests.get(url).text, "html.parser")
+            infoBoxes = soup.find_all("td", class_="infobox-data")
+            version = infoBoxes[5].text[: infoBoxes[5].text.find(" ")]
+            self.vivaldi = version
+        except Exception as e:
+            print(e)
+            raise Exception("Error updating vivaldi")
 
-    def updateOpera(self):
-        url = "https://en.wikipedia.org/wiki/Opera_(web_browser)"
-        soup = BeautifulSoup(requests.get(url).text, "html.parser")
-        infoBoxes = soup.find_all("td", class_="infobox-data")
-        version = infoBoxes[2].p.text[: infoBoxes[2].p.text.find(" ")]
-        self.opera = version
+    def updateOpera(self) -> str:
+        try:
+            url = "https://en.wikipedia.org/wiki/Opera_(web_browser)"
+            soup = BeautifulSoup(requests.get(url).text, "html.parser")
+            infoBoxes = soup.find_all("td", class_="infobox-data")
+            version = infoBoxes[2].div.text[: infoBoxes[2].div.text.find("[")]
+            self.opera = version
+        except Exception as e:
+            print(e)
+            raise Exception("Error updating Opera")
 
     def updateAll(self):
         updaters = [
@@ -78,6 +100,11 @@ class VersionUpdater:
             "OPR": self.opera,
             "Safari": self.safari,
         }
+        for version in versions:
+            if not ((versions[version]).replace(".", "")).isnumeric():
+                raise ValueError(
+                    f"Scraped result for {version} is incorrect: {versions[version]}"
+                )
         self.versionsPath.write_text(json.dumps(versions))
 
 
